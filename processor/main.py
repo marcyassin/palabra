@@ -4,10 +4,10 @@ import os
 import logging
 import psycopg2
 from minio import Minio
+from dotenv import load_dotenv
 
-# -----------------------
-# Configuration
-# -----------------------
+load_dotenv()
+
 DB_URL = os.getenv("DATABASE_URL", "postgres://palabra:secret@localhost:5432/palabra")
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
@@ -15,15 +15,9 @@ MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_BUCKET = os.getenv("MINIO_BUCKET", "bookprep")
 MINIO_USE_SSL = os.getenv("MINIO_SSL", "false").lower() == "true"
 
-# -----------------------
-# Logging
-# -----------------------
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("processor")
 
-# -----------------------
-# Database connection
-# -----------------------
 try:
     conn = psycopg2.connect(DB_URL)
     conn.autocommit = True
@@ -32,9 +26,6 @@ except Exception as e:
     logger.error(f"Failed to connect to Postgres: {e}")
     raise
 
-# -----------------------
-# MinIO client
-# -----------------------
 try:
     minio_client = Minio(
         MINIO_ENDPOINT,
@@ -50,9 +41,6 @@ except Exception as e:
     logger.error(f"Failed to connect to MinIO: {e}")
     raise
 
-# -----------------------
-# Book processing stub
-# -----------------------
 def process_book(book_id, filename):
     """
     Stub function to process a book.
@@ -66,9 +54,6 @@ def process_book(book_id, filename):
     # TODO: implement actual processing
     pass
 
-# -----------------------
-# Main loop (placeholder)
-# -----------------------
 def main():
     logger.info("Processor started. Waiting for work...")
     # TODO: Replace this with real job queue or polling
