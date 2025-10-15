@@ -1,0 +1,55 @@
+# --- Go (api/)
+api/bin/
+api/build/
+api/dist/
+api/tmp/
+api/coverage/
+api/*.test
+api/*.out
+
+# Go binaries (just in case)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Environment & secrets
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.cert
+config.yaml
+config.yml
+
+# Logs & data
+*.log
+logs/
+data/
+uploads/
+storage/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.bak
+*.tmp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Node or frontend (if you add a webapp later)
+node_modules/
+dist/
+build/
