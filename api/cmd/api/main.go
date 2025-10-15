@@ -1,52 +1,80 @@
 package main
 
 import (
+    "context"
     "database/sql"
-    "flag"
+    "fmt"
     "log"
     "net/http"
     "os"
+    "strconv"
+
+    "github.com/joho/godotenv"
+    "github.com/minio/minio-go/v7"
+    "github.com/minio/minio-go/v7/pkg/credentials"
+    _ "github.com/lib/pq"
 
     "marcyassin/bookprep/internal/models/postgres"
-
-    _ "github.com/lib/pq"
 )
 
 type application struct {
-    errorLog *log.Logger
-    infoLog  *log.Logger
-    db       *sql.DB
-    books    *postgres.BookModel
+    errorLog    *log.Logger
+    infoLog     *log.Logger
+    db          *sql.DB
+    books       *postgres.BookModel
+    minioClient *minio.Client
+    minioBucket string
 }
 
 func main() {
-    addr := flag.String("addr", ":4000", "HTTP network address")
-    dsn := flag.String("dsn", "postgres://bookprep_user:secret@localhost:5432/bookprep?sslmode=disable", "Postgres data source name")
-    flag.Parse()
-
     infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
     errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-    db, err := openDB(*dsn)
+    if err := godotenv.Load(); err != nil {
+        errorLog.Println("No .env file found — continuing with environment variables")
+    }
+
+    addr := getEnv("APP_ADDR", ":4000")
+    dsn := getEnv("DATABASE_URL", "")
+    if dsn == "" {
+        errorLog.Fatal("DATABASE_URL must be set")
+    }
+
+    minioEndpoint := getEnv("MINIO_ENDPOINT", "localhost:9000")
+    minioAccess := getEnv("MINIO_ACCESS_KEY", "minioadmin")
+    minioSecret := getEnv("MINIO_SECRET_KEY", "minioadmin")
+    minioUseSSL := getEnv("MINIO_SSL", "false")
+    minioBucket := getEnv("MINIO_BUCKET", "bookprep")
+
+    useSSL, _ := strconv.ParseBool(minioUseSSL)
+
+    db, err := openDB(dsn)
     if err != nil {
-        errorLog.Fatal(err)
+        errorLog.Fatalf("Database connection failed: %v", err)
     }
     defer db.Close()
 
+    minioClient, err := openMinIO(minioEndpoint, minioAccess, minioSecret, useSSL)
+    if err != nil {
+    errorLog.Fatalf("MinIO connection failed: %v", err)
+}
+
     app := &application{
-        errorLog: errorLog,
-        infoLog:  infoLog,
-        db:       db,
-        books: &postgres.BookModel{DB: db},
+        errorLog:    errorLog,
+        infoLog:     infoLog,
+        db:          db,
+        books:       &postgres.BookModel{DB: db},
+        minioClient: minioClient,
+        minioBucket: minioBucket,
     }
 
     srv := &http.Server{
-        Addr:     *addr,
+        Addr:     addr,
         ErrorLog: errorLog,
         Handler:  app.routes(),
     }
 
-    infoLog.Printf("Starting server on %s", *addr)
+    infoLog.Printf("Starting server on %s", addr)
     err = srv.ListenAndServe()
     errorLog.Fatal(err)
 }
@@ -61,4 +89,26 @@ func openDB(dsn string) (*sql.DB, error) {
     }
     return db, nil
 }
-    
+
+func openMinIO(endpoint, accessKey, secretKey string, useSSL bool) (*minio.Client, error) {
+    client, err := minio.New(endpoint, &minio.Options{
+        Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+        Secure: useSSL,
+    })
+    if err != nil {
+        return nil, fmt.Errorf("failed to initialize MinIO client: %w", err)
+    }
+
+    if _, err := client.ListBuckets(context.Background()); err != nil {
+        return nil, fmt.Errorf("failed to connect to MinIO: %w", err)
+    }
+
+    return client, nil
+}
+
+func getEnv(key, fallback string) string {
+    if value, exists := os.LookupEnv(key); exists {
+        return value
+    }
+    return fallback
+}
