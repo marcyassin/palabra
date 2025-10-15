@@ -7,6 +7,8 @@ import (
     "net/http"
     "os"
 
+    "marcyassin/bookprep/internal/models/postgres"
+
     _ "github.com/lib/pq"
 )
 
@@ -14,6 +16,7 @@ type application struct {
     errorLog *log.Logger
     infoLog  *log.Logger
     db       *sql.DB
+    books    *postgres.BookModel
 }
 
 func main() {
@@ -34,6 +37,7 @@ func main() {
         errorLog: errorLog,
         infoLog:  infoLog,
         db:       db,
+        books: &postgres.BookModel{DB: db},
     }
 
     srv := &http.Server{
