@@ -53,3 +53,6 @@ docker-compose.override.yml
 node_modules/
 dist/
 build/
+
+# Ignore Python virtual environment for processor
+processor/.venv/
