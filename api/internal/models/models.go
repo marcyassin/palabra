@@ -26,3 +26,9 @@ type Word struct {
     Frequency  int       // total frequency across all books
     Created    time.Time // record created timestamp
 }
+
+type BookWord struct {
+    BookID int // references Book.ID
+    WordID int // references Word.ID
+    Count  int // number of times this word occurs in the book
+}

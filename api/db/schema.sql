@@ -1,4 +1,4 @@
-\restrict YXdfbZ69O6ecwO8MHgNaJ7PrlN7XWjWpweadt46PRKM9djEiwfK6zVufScMRsCJ
+\restrict 9ApuyTf4DfGHD5nTCP4lfgbN15b9kB6UqXhuGEqzEyVg9Om7MDAAH3e15IDIDUT
 
 -- Dumped from database version 16.10 (Debian 16.10-1.pgdg13+1)
 -- Dumped by pg_dump version 16.10 (Homebrew)
@@ -17,6 +17,17 @@ SET row_security = off;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: book_words; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.book_words (
+    book_id integer NOT NULL,
+    word_id integer NOT NULL,
+    count integer DEFAULT 1 NOT NULL
+);
+
 
 --
 -- Name: books; Type: TABLE; Schema: public; Owner: -
@@ -112,6 +123,14 @@ ALTER TABLE ONLY public.words ALTER COLUMN id SET DEFAULT nextval('public.words_
 
 
 --
+-- Name: book_words book_words_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.book_words
+    ADD CONSTRAINT book_words_pkey PRIMARY KEY (book_id, word_id);
+
+
+--
 -- Name: books books_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -136,10 +155,26 @@ ALTER TABLE ONLY public.words
 
 
 --
+-- Name: book_words book_words_book_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.book_words
+    ADD CONSTRAINT book_words_book_id_fkey FOREIGN KEY (book_id) REFERENCES public.books(id) ON DELETE CASCADE;
+
+
+--
+-- Name: book_words book_words_word_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.book_words
+    ADD CONSTRAINT book_words_word_id_fkey FOREIGN KEY (word_id) REFERENCES public.words(id) ON DELETE CASCADE;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict YXdfbZ69O6ecwO8MHgNaJ7PrlN7XWjWpweadt46PRKM9djEiwfK6zVufScMRsCJ
+\unrestrict 9ApuyTf4DfGHD5nTCP4lfgbN15b9kB6UqXhuGEqzEyVg9Om7MDAAH3e15IDIDUT
 
 
 --
@@ -148,4 +183,5 @@ ALTER TABLE ONLY public.words
 
 INSERT INTO public.schema_migrations (version) VALUES
     ('20251015181202'),
-    ('20251015182847');
+    ('20251015182847'),
+    ('20251015184415');
