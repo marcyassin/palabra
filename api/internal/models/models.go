@@ -17,3 +17,12 @@ type Book struct {
     Created   time.Time
     Processed time.Time // when NLP analysis completed
 }
+
+type Word struct {
+    ID         int
+    Word       string    // the word itself
+    Language   string    // language code, e.g., "es"
+    Difficulty int       // 1–6 for now, corresponding to A1–C2
+    Frequency  int       // total frequency across all books
+    Created    time.Time // record created timestamp
+}
