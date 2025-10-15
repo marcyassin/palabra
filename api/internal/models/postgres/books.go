@@ -1,8 +1,7 @@
-package mysql
+package postgres
 
 import (
     "database/sql"
-	"time"
 
     "marcyassin/bookprep/internal/models"
 )
