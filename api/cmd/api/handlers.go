@@ -17,7 +17,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
     w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("BookPrep API Service"))
+	w.Write([]byte("Palabra API Service"))
 }
 
 func (app *application) apiRoot(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +29,7 @@ func (app *application) apiRoot(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{
-		"service": "BookPrep API",
+		"service": "Palabra API",
 		"version": "v1",
 		"endpoints": {
 			"books": "/api/books",

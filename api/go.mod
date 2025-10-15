@@ -1,4 +1,4 @@
-module marcyassin/bookprep
+module marcyassin/palabra
 
 go 1.25.2
 

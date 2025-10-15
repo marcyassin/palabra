@@ -14,7 +14,7 @@ import (
     "github.com/minio/minio-go/v7/pkg/credentials"
     _ "github.com/lib/pq"
 
-    "marcyassin/bookprep/internal/models/postgres"
+    "marcyassin/palabra/internal/models/postgres"
 )
 
 type application struct {
@@ -44,7 +44,7 @@ func main() {
     minioAccess := getEnv("MINIO_ACCESS_KEY", "minioadmin")
     minioSecret := getEnv("MINIO_SECRET_KEY", "minioadmin")
     minioUseSSL := getEnv("MINIO_SSL", "false")
-    minioBucket := getEnv("MINIO_BUCKET", "bookprep")
+    minioBucket := getEnv("MINIO_BUCKET", "palabra")
 
     useSSL, _ := strconv.ParseBool(minioUseSSL)
 

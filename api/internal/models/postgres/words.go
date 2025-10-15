@@ -3,7 +3,7 @@ package postgres
 import (
     "database/sql"
 
-    "marcyassin/bookprep/internal/models"
+    "marcyassin/palabra/internal/models"
 )
 
 type WordModel struct {
