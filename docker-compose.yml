@@ -33,6 +33,13 @@ services:
     volumes:
       - ./api/db/migrations:/db/migrations
 
+  tika:
+    image: apache/tika:3.2.3.0-full
+    container_name: tika
+    ports:
+      - "9998:9998"
+    restart: always
+
 volumes:
   pgdata:
   miniodata:
