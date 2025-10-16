@@ -3,6 +3,7 @@ package models
 import (
     "errors"
     "time"
+    "database/sql"
 )
 
 var ErrNoRecord = errors.New("models: no matching record found")
@@ -15,7 +16,7 @@ type Book struct {
     UserID    int       // if multiple users will upload books
     Status    string    // "pending", "processing", "done"
     Created   time.Time
-    Processed time.Time // when NLP analysis completed
+    Processed sql.NullTime // when NLP analysis completed
 }
 
 type Word struct {

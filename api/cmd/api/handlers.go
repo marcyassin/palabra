@@ -38,15 +38,30 @@ func (app *application) apiRoot(w http.ResponseWriter, r *http.Request) {
 	}`))
 }
 
-func (app *application) listBooks(w http.ResponseWriter, r *http.Request) {
+func (app *application) getBooks(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
+
+	books, err := app.books.Latest(20)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	js, err := json.MarshalIndent(map[string]interface{}{
+		"books": books,
+	}, "", "  ")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"books": []}`))
+	w.Write(js)
 }
 
 func (app *application) uploadBook(w http.ResponseWriter, r *http.Request) {
@@ -94,34 +109,37 @@ func (app *application) uploadBook(w http.ResponseWriter, r *http.Request) {
 
 	app.infoLog.Printf("File uploaded to MinIO: %s (%d bytes)", uploadInfo.Key, uploadInfo.Size)
 
-	bookID, err := app.books.Insert(header.Filename, uniqueFilename, language, userID)
+	bookId, err := app.books.Insert(header.Filename, uniqueFilename, language, userID)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	app.infoLog.Printf("Book record inserted: ID=%d, filename=%s", bookID, uniqueFilename)
+	app.infoLog.Printf("Book record inserted: ID=%d, filename=%s", bookId, uniqueFilename)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(fmt.Sprintf(`{"status":"uploaded","id":%d,"filename":"%s"}`, bookID, uniqueFilename)))
+	w.Write([]byte(fmt.Sprintf(`{"status":"uploaded","id":%d,"filename":"%s"}`, bookId, uniqueFilename)))
 }
 
-func (app *application) bookOverview(w http.ResponseWriter, r *http.Request, bookID int) {
-	// TODO: Fetch book info and word stats from DB
-	overview := map[string]interface{}{
-		"book_id":      bookID,
-		"title":        "El Problema de los Tres Cuerpos",
-		"total_words":  120000,
-		"unique_words": 14043,
-		"language":     "es",
+func (app *application) getBook(w http.ResponseWriter, r *http.Request, bookId int) {
+	book, err := app.books.Get(bookId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	if book == nil {
+		app.clientError(w, http.StatusNotFound)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(overview)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(book)
 }
 
-func (app *application) topWords(w http.ResponseWriter, r *http.Request, bookID int) {
+func (app *application) topWords(w http.ResponseWriter, r *http.Request, bookId int) {
 	nStr := r.URL.Query().Get("n")
 	sortOrder := r.URL.Query().Get("sort")
 	if nStr == "" {
@@ -142,7 +160,7 @@ func (app *application) topWords(w http.ResponseWriter, r *http.Request, bookID 
 	json.NewEncoder(w).Encode(words)
 }
 
-func (app *application) wordsByDifficulty(w http.ResponseWriter, r *http.Request, bookID int) {
+func (app *application) wordsByDifficulty(w http.ResponseWriter, r *http.Request, bookId int) {
 	// TODO: Query DB and group words by difficulty
 	response := map[string][]map[string]interface{}{
 		"1": {{"word": "hola", "count": 23}},
@@ -174,7 +192,7 @@ func (app *application) translateWord(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(translation)
 }
 
-func (app *application) filteredWords(w http.ResponseWriter, r *http.Request, bookID int) {
+func (app *application) filteredWords(w http.ResponseWriter, r *http.Request, bookId int) {
 	// query := r.URL.Query()
 	// difficultyStr := query.Get("difficulty")
 	// minCountStr := query.Get("min_count")

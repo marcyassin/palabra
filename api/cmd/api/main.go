@@ -58,7 +58,7 @@ func main() {
     if err != nil {
     errorLog.Fatalf("MinIO connection failed: %v", err)
     }
-    ensureBucket(minioClient, minioBucket, errorLog)
+    ensureBucket(minioClient, minioBucket, infoLog, errorLog)
 
     app := &application{
         errorLog:    errorLog,
@@ -107,7 +107,7 @@ func openMinIO(endpoint, accessKey, secretKey string, useSSL bool) (*minio.Clien
     return client, nil
 }
 
-func ensureBucket(client *minio.Client, bucketName string, errorLog *log.Logger) {
+func ensureBucket(client *minio.Client, bucketName string, infoLog *log.Logger, errorLog *log.Logger) {
     ctx := context.Background()
 
     exists, err := client.BucketExists(ctx, bucketName)
@@ -119,9 +119,9 @@ func ensureBucket(client *minio.Client, bucketName string, errorLog *log.Logger)
         if err := client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{}); err != nil {
             errorLog.Fatalf("Failed to create bucket %s: %v", bucketName, err)
         }
-        errorLog.Printf("Created bucket: %s", bucketName)
+        infoLog.Printf("Created bucket: %s", bucketName)
     } else {
-        errorLog.Printf("Bucket %s already exists", bucketName)
+        infoLog.Printf("Bucket %s already exists", bucketName)
     }
 }
 

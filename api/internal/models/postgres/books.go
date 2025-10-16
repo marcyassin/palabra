@@ -44,14 +44,18 @@ func (m *BookModel) Get(id int) (*models.Book, error) {
     return b, nil
 }
 
-func (m *BookModel) Latest() ([]*models.Book, error) {
+func (m *BookModel) Latest(limit int) ([]*models.Book, error) {
+    if limit <= 0 {
+        limit = 10
+    }
+
     query := `
         SELECT id, title, filename, language, user_id, status, created, processed
         FROM books
         ORDER BY created DESC
-        LIMIT 10`
+        LIMIT $1`
     
-    rows, err := m.DB.Query(query)
+    rows, err := m.DB.Query(query, limit)
     if err != nil {
         return nil, err
     }
