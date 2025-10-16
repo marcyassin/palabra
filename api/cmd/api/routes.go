@@ -1,14 +1,37 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+	"strconv"
 
-func (app *application) routes() *http.ServeMux {
-	mux := http.NewServeMux()
+	"github.com/gorilla/mux"
+)
 
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/api", app.apiRoot)
-	mux.HandleFunc("/api/books", app.listBooks)
-	mux.HandleFunc("/api/books/upload", app.uploadBook)
+func (app *application) withBookID(h func(http.ResponseWriter, *http.Request, int)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		bookID, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			http.Error(w, "Invalid Book ID", http.StatusBadRequest)
+			return
+		}
+		h(w, r, bookID)
+	}
+}
 
-	return mux
+func (app *application) routes() *mux.Router {
+	r := mux.NewRouter()
+
+	r.HandleFunc("/", app.home)
+	r.HandleFunc("/api", app.apiRoot)
+
+	r.HandleFunc("/api/books", app.listBooks).Methods("GET")
+	r.HandleFunc("/api/books/upload", app.uploadBook).Methods("POST")
+
+	r.HandleFunc("/api/books/{id:[0-9]+}/overview", app.withBookID(app.bookOverview)).Methods("GET")
+	r.HandleFunc("/api/books/{id:[0-9]+}/top-words", app.withBookID(app.topWords)).Methods("GET")
+	r.HandleFunc("/api/books/{id:[0-9]+}/words-by-difficulty", app.withBookID(app.wordsByDifficulty)).Methods("GET")
+	r.HandleFunc("/api/books/{id:[0-9]+}/filtered-words", app.withBookID(app.filteredWords)).Methods("GET")
+
+	return r
 }
