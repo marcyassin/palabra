@@ -64,17 +64,11 @@ def process_book(book_id, filename):
     logger.info(f"Processing book {book_id}: {filename}")
 
     try:
-        # -----------------------
-        # 1. Download from MinIO
-        # -----------------------
         response = minio_client.get_object(MINIO_BUCKET, filename)
         data = BytesIO(response.read())
         response.close()
         response.release_conn()
 
-        # -----------------------
-        # 2. Extract text via Tika
-        # -----------------------
         parsed = parser.from_buffer(data, serverEndpoint="http://localhost:9998/tika")
         text = parsed.get("content", "").strip()
 
@@ -82,9 +76,6 @@ def process_book(book_id, filename):
             logger.warning(f"No text extracted from {filename}")
             return
 
-        # -----------------------
-        # 3. Tokenize and filter words
-        # -----------------------
         stop_words = set(stopwords.words("spanish"))
         words = re.findall(r'\b\w+\b', text.lower(), flags=re.UNICODE)
         words = [w for w in words if w.isalpha() and w not in stop_words]
@@ -92,9 +83,6 @@ def process_book(book_id, filename):
 
         logger.info(f"Book {book_id} contains {len(word_counts)} unique words")
 
-        # -----------------------
-        # 4. Insert words into `words` table in bulk
-        # -----------------------
         unique_words = [(word, LANGUAGE_CODE) for word in word_counts.keys()]
 
         with conn.cursor() as cur:
@@ -142,7 +130,7 @@ def process_book(book_id, filename):
 def main():
     logger.info("Processor started. Running test extraction...")
 
-    book_id = 1  # or whatever ID you want to use
+    book_id = 1 
     filename = "f95b9737-fb6a-4feb-ba0c-07cf21732299-cixin.epub"
 
     try:
