@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("processor")
 nltk.download('stopwords')
 
-LANGUAGE_CODE = "es"  # ISO 639-1 code for Spanish
+LANGUAGE_CODE = "es"
 
 try:
     conn = psycopg2.connect(DB_URL)
