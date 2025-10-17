@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
@@ -36,6 +38,23 @@ func (app *application) apiRoot(w http.ResponseWriter, r *http.Request) {
 			"upload": "/api/books/upload"
 		}
 	}`))
+}
+
+func (app *application) getBook(w http.ResponseWriter, r *http.Request, bookId int) {
+	book, err := app.books.Get(bookId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	if book == nil {
+		app.clientError(w, http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(book)
 }
 
 func (app *application) getBooks(w http.ResponseWriter, r *http.Request) {
@@ -122,88 +141,135 @@ func (app *application) uploadBook(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf(`{"status":"uploaded","id":%d,"filename":"%s"}`, bookId, uniqueFilename)))
 }
 
-func (app *application) getBook(w http.ResponseWriter, r *http.Request, bookId int) {
-	book, err := app.books.Get(bookId)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
+func (app *application) getBookWords(w http.ResponseWriter, r *http.Request, bookID int) {
+    query := r.URL.Query()
 
-	if book == nil {
-		app.clientError(w, http.StatusNotFound)
-		return
-	}
+    // Params
+    nStr := query.Get("n")
+    sortOrder := strings.ToLower(query.Get("sort"))
+    difficultyStr := query.Get("difficulty")
+    minCountStr := query.Get("min_count")
+    maxCountStr := query.Get("max_count")
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(book)
+    // Defaults
+    n := 1000
+    if nStr != "" {
+        if val, err := strconv.Atoi(nStr); err == nil && val > 0 {
+            n = val
+        }
+    }
+
+    if sortOrder != "asc" && sortOrder != "desc" {
+        sortOrder = "desc"
+    }
+
+    // Optional filters
+    difficulty := -1
+    if difficultyStr != "" {
+        if val, err := strconv.Atoi(difficultyStr); err == nil {
+            difficulty = val
+        }
+    }
+    minCount := -1
+    if minCountStr != "" {
+        if val, err := strconv.Atoi(minCountStr); err == nil {
+            minCount = val
+        }
+    }
+    maxCount := -1
+    if maxCountStr != "" {
+        if val, err := strconv.Atoi(maxCountStr); err == nil {
+            maxCount = val
+        }
+    }
+
+    // Step 1: Fetch word counts for book
+    wordCounts, err := app.bookWords.GetByBook(bookID)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    if len(wordCounts) == 0 {
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode([]interface{}{})
+        return
+    }
+
+    // Step 2: Load word details
+    wordIDs := make([]int, 0, len(wordCounts))
+    for id := range wordCounts {
+        wordIDs = append(wordIDs, id)
+    }
+
+    placeholders := make([]string, len(wordIDs))
+    args := make([]interface{}, len(wordIDs))
+    for i, id := range wordIDs {
+        placeholders[i] = fmt.Sprintf("$%d", i+1)
+        args[i] = id
+    }
+
+    queryStr := fmt.Sprintf(`
+        SELECT id, word, COALESCE(difficulty, 0) AS difficulty
+        FROM words
+        WHERE id IN (%s)
+    `, strings.Join(placeholders, ","))
+
+    rows, err := app.db.Query(queryStr, args...)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    defer rows.Close()
+
+    type wordInfo struct {
+        Word       string `json:"word"`
+        Count      int    `json:"count"`
+        Difficulty int    `json:"difficulty"`
+    }
+
+    words := []wordInfo{}
+    for rows.Next() {
+        var id, diff int
+        var wText string
+        if err := rows.Scan(&id, &wText, &diff); err != nil {
+            app.serverError(w, err)
+            return
+        }
+
+        count := wordCounts[id]
+
+        // Apply filters
+        if difficulty != -1 && diff != difficulty {
+            continue
+        }
+        if minCount != -1 && count < minCount {
+            continue
+        }
+        if maxCount != -1 && count > maxCount {
+            continue
+        }
+
+        words = append(words, wordInfo{
+            Word:       wText,
+            Count:      count,
+            Difficulty: diff,
+        })
+    }
+
+    // Step 3: Sort
+    sort.Slice(words, func(i, j int) bool {
+        if sortOrder == "asc" {
+            return words[i].Count < words[j].Count
+        }
+        return words[i].Count > words[j].Count
+    })
+
+    // Step 4: Limit
+    if len(words) > n {
+        words = words[:n]
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(words)
 }
 
-func (app *application) topWords(w http.ResponseWriter, r *http.Request, bookId int) {
-	nStr := r.URL.Query().Get("n")
-	sortOrder := r.URL.Query().Get("sort")
-	if nStr == "" {
-		nStr = "50"
-	}
-	if sortOrder == "" {
-		sortOrder = "desc"
-	}
-	// n, _ := strconv.Atoi(nStr)
-
-	// TODO: Query DB for top N words, ordered by count asc/desc
-	words := []map[string]interface{}{
-		{"word": "trilogía", "count": 120, "difficulty": 3},
-		{"word": "cultura", "count": 98, "difficulty": 2},
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(words)
-}
-
-func (app *application) wordsByDifficulty(w http.ResponseWriter, r *http.Request, bookId int) {
-	// TODO: Query DB and group words by difficulty
-	response := map[string][]map[string]interface{}{
-		"1": {{"word": "hola", "count": 23}},
-		"2": {{"word": "cultura", "count": 12}},
-		"3": {{"word": "trilogía", "count": 5}},
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
-
-func (app *application) translateWord(w http.ResponseWriter, r *http.Request) {
-	word := r.URL.Query().Get("word")
-	lang := r.URL.Query().Get("lang")
-
-	if word == "" || lang == "" {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-
-	// TODO: Query DB or external service for translation
-	translation := map[string]interface{}{
-		"word":        word,
-		"translation": "trilogy", // placeholder
-		"language":    lang,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(translation)
-}
-
-func (app *application) filteredWords(w http.ResponseWriter, r *http.Request, bookId int) {
-	// query := r.URL.Query()
-	// difficultyStr := query.Get("difficulty")
-	// minCountStr := query.Get("min_count")
-	// maxCountStr := query.Get("max_count")
-
-	// TODO: Query DB with filters
-	response := []map[string]interface{}{
-		{"word": "hola", "count": 23, "difficulty": 1},
-		{"word": "cultura", "count": 12, "difficulty": 2},
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}

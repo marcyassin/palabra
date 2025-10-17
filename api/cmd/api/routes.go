@@ -27,11 +27,10 @@ func (app *application) routes() *mux.Router {
 
 	r.HandleFunc("/api/books", app.getBooks).Methods("GET")
 	r.HandleFunc("/api/books/upload", app.uploadBook).Methods("POST")
-
 	r.HandleFunc("/api/books/{id:[0-9]+}", app.withBookID(app.getBook)).Methods("GET")
-	r.HandleFunc("/api/books/{id:[0-9]+}/top-words", app.withBookID(app.topWords)).Methods("GET")
-	r.HandleFunc("/api/books/{id:[0-9]+}/words-by-difficulty", app.withBookID(app.wordsByDifficulty)).Methods("GET")
-	r.HandleFunc("/api/books/{id:[0-9]+}/filtered-words", app.withBookID(app.filteredWords)).Methods("GET")
+
+	r.HandleFunc("/api/books/{id:[0-9]+}/words", app.withBookID(app.getBookWords)).Methods("GET")
 
 	return r
 }
+

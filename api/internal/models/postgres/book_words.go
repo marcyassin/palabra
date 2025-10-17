@@ -4,11 +4,11 @@ import (
     "database/sql"
 )
 
-type BookWordModel struct {
+type BookWordsModel struct {
     DB *sql.DB
 }
 
-func (m *BookWordModel) Insert(bookID, wordID, count int) error {
+func (m *BookWordsModel) Insert(bookID, wordID, count int) error {
     query := `
         INSERT INTO book_words (book_id, word_id, count)
         VALUES ($1, $2, $3)
@@ -19,7 +19,7 @@ func (m *BookWordModel) Insert(bookID, wordID, count int) error {
     return err
 }
 
-func (m *BookWordModel) GetByBook(bookID int) (map[int]int, error) {
+func (m *BookWordsModel) GetByBook(bookID int) (map[int]int, error) {
     query := `SELECT word_id, count FROM book_words WHERE book_id = $1`
     rows, err := m.DB.Query(query, bookID)
     if err != nil {

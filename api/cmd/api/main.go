@@ -22,6 +22,7 @@ type application struct {
     infoLog     *log.Logger
     db          *sql.DB
     books       *postgres.BookModel
+    bookWords   *postgres.BookWordsModel
     minioClient *minio.Client
     minioBucket string
 }
@@ -65,6 +66,7 @@ func main() {
         infoLog:     infoLog,
         db:          db,
         books:       &postgres.BookModel{DB: db},
+        bookWords:   &postgres.BookWordsModel{DB: db},
         minioClient: minioClient,
         minioBucket: minioBucket,
     }
