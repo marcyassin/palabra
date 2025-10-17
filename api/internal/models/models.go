@@ -3,33 +3,40 @@ package models
 import (
     "errors"
     "time"
-    "database/sql"
 )
 
 var ErrNoRecord = errors.New("models: no matching record found")
 
 type Book struct {
-    ID        int       // primary key
-    Title     string    // book title
-    Filename  string    // name of uploaded file in MinIO
-    Language  string    // e.g., "es" for Spanish
-    UserID    int       // if multiple users will upload books
-    Status    string    // "pending", "processing", "done"
-    Created   time.Time
-    Processed sql.NullTime // when NLP analysis completed
+    ID        int           `json:"id"`
+    Title     string        `json:"title"`
+    Filename  string        `json:"filename"`
+    Language  string        `json:"language"`
+    UserID    int           `json:"userId"`
+    Status    string        `json:"status"`
+    Created   time.Time     `json:"created"`
+    Processed *time.Time  `json:"processed"`
 }
 
 type Word struct {
-    ID         int
-    Word       string    // the word itself
-    Language   string    // language code, e.g., "es"
-    Difficulty int       // 1–6 for now, corresponding to A1–C2
-    Frequency  int       // total frequency across all books
-    Created    time.Time // record created timestamp
+    ID              int       `json:"id"`
+    Word            string    `json:"word"`
+    Language        string    `json:"language"`
+    Difficulty      *int       `json:"difficulty"`
+    Translation     *string    `json:"translation"`
+    DefinitionEN    *string    `json:"definition_en"`
+    DefinitionLocal *string    `json:"definition_local"`
+    Created         time.Time `json:"created"`
 }
 
 type BookWord struct {
-    BookID int // references Book.ID
-    WordID int // references Word.ID
-    Count  int // number of times this word occurs in the book
+    BookID int 
+    WordID int
+    Count  int
 }
+
+type WordInfo struct {
+    Word
+    Count int `json:"count"`
+}
+

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -144,132 +143,51 @@ func (app *application) uploadBook(w http.ResponseWriter, r *http.Request) {
 func (app *application) getBookWords(w http.ResponseWriter, r *http.Request, bookID int) {
     query := r.URL.Query()
 
-    // Params
-    nStr := query.Get("n")
+    limit := 50
+    offset := 0
     sortOrder := strings.ToLower(query.Get("sort"))
-    difficultyStr := query.Get("difficulty")
-    minCountStr := query.Get("min_count")
-    maxCountStr := query.Get("max_count")
-
-    // Defaults
-    n := 1000
-    if nStr != "" {
-        if val, err := strconv.Atoi(nStr); err == nil && val > 0 {
-            n = val
-        }
-    }
-
     if sortOrder != "asc" && sortOrder != "desc" {
         sortOrder = "desc"
     }
 
-    // Optional filters
     difficulty := -1
-    if difficultyStr != "" {
-        if val, err := strconv.Atoi(difficultyStr); err == nil {
+    if diffStr := query.Get("difficulty"); diffStr != "" {
+        if val, err := strconv.Atoi(diffStr); err == nil {
             difficulty = val
         }
     }
+
     minCount := -1
-    if minCountStr != "" {
-        if val, err := strconv.Atoi(minCountStr); err == nil {
+    if minStr := query.Get("min_count"); minStr != "" {
+        if val, err := strconv.Atoi(minStr); err == nil {
             minCount = val
         }
     }
+
     maxCount := -1
-    if maxCountStr != "" {
-        if val, err := strconv.Atoi(maxCountStr); err == nil {
+    if maxStr := query.Get("max_count"); maxStr != "" {
+        if val, err := strconv.Atoi(maxStr); err == nil {
             maxCount = val
         }
     }
 
-    // Step 1: Fetch word counts for book
-    wordCounts, err := app.bookWords.GetByBook(bookID)
+    if lStr := query.Get("limit"); lStr != "" {
+        if val, err := strconv.Atoi(lStr); err == nil && val > 0 {
+            limit = val
+        }
+    }
+    if oStr := query.Get("offset"); oStr != "" {
+        if val, err := strconv.Atoi(oStr); err == nil && val >= 0 {
+            offset = val
+        }
+    }
+
+    words, err := app.bookWords.GetBookWords(bookID, difficulty, minCount, maxCount, limit, offset, sortOrder)
     if err != nil {
         app.serverError(w, err)
         return
-    }
-    if len(wordCounts) == 0 {
-        w.Header().Set("Content-Type", "application/json")
-        json.NewEncoder(w).Encode([]interface{}{})
-        return
-    }
-
-    // Step 2: Load word details
-    wordIDs := make([]int, 0, len(wordCounts))
-    for id := range wordCounts {
-        wordIDs = append(wordIDs, id)
-    }
-
-    placeholders := make([]string, len(wordIDs))
-    args := make([]interface{}, len(wordIDs))
-    for i, id := range wordIDs {
-        placeholders[i] = fmt.Sprintf("$%d", i+1)
-        args[i] = id
-    }
-
-    queryStr := fmt.Sprintf(`
-        SELECT id, word, COALESCE(difficulty, 0) AS difficulty
-        FROM words
-        WHERE id IN (%s)
-    `, strings.Join(placeholders, ","))
-
-    rows, err := app.db.Query(queryStr, args...)
-    if err != nil {
-        app.serverError(w, err)
-        return
-    }
-    defer rows.Close()
-
-    type wordInfo struct {
-        Word       string `json:"word"`
-        Count      int    `json:"count"`
-        Difficulty int    `json:"difficulty"`
-    }
-
-    words := []wordInfo{}
-    for rows.Next() {
-        var id, diff int
-        var wText string
-        if err := rows.Scan(&id, &wText, &diff); err != nil {
-            app.serverError(w, err)
-            return
-        }
-
-        count := wordCounts[id]
-
-        // Apply filters
-        if difficulty != -1 && diff != difficulty {
-            continue
-        }
-        if minCount != -1 && count < minCount {
-            continue
-        }
-        if maxCount != -1 && count > maxCount {
-            continue
-        }
-
-        words = append(words, wordInfo{
-            Word:       wText,
-            Count:      count,
-            Difficulty: diff,
-        })
-    }
-
-    // Step 3: Sort
-    sort.Slice(words, func(i, j int) bool {
-        if sortOrder == "asc" {
-            return words[i].Count < words[j].Count
-        }
-        return words[i].Count > words[j].Count
-    })
-
-    // Step 4: Limit
-    if len(words) > n {
-        words = words[:n]
     }
 
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(words)
 }
-

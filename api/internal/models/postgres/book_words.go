@@ -2,6 +2,10 @@ package postgres
 
 import (
     "database/sql"
+    "fmt"
+    "strings"
+
+    "marcyassin/palabra/internal/models"
 )
 
 type BookWordsModel struct {
@@ -39,4 +43,63 @@ func (m *BookWordsModel) GetByBook(bookID int) (map[int]int, error) {
         return nil, err
     }
     return result, nil
+}
+
+func (m *BookWordsModel) GetBookWords(
+    bookID int,
+    difficulty, minCount, maxCount, limit, offset int,
+    sortOrder string,
+) ([]models.WordInfo, error) {
+    args := []interface{}{bookID}
+    whereClauses := []string{"bw.book_id = $1"}
+
+    if difficulty != -1 {
+        args = append(args, difficulty)
+        whereClauses = append(whereClauses, fmt.Sprintf("w.difficulty = $%d", len(args)))
+    }
+    if minCount != -1 {
+        args = append(args, minCount)
+        whereClauses = append(whereClauses, fmt.Sprintf("bw.count >= $%d", len(args)))
+    }
+    if maxCount != -1 {
+        args = append(args, maxCount)
+        whereClauses = append(whereClauses, fmt.Sprintf("bw.count <= $%d", len(args)))
+    }
+
+    // Append limit and offset
+    args = append(args, limit, offset)
+    queryStr := fmt.Sprintf(`
+        SELECT w.id, w.word, w.language, w.difficulty, w.translation,
+               w.definition_en, w.definition_local, bw.count
+        FROM book_words bw
+        JOIN words w ON w.id = bw.word_id
+        WHERE %s
+        ORDER BY bw.count %s
+        LIMIT $%d OFFSET $%d
+    `, strings.Join(whereClauses, " AND "), sortOrder, len(args)-1, len(args))
+
+    rows, err := m.DB.Query(queryStr, args...)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    words := []models.WordInfo{}
+    for rows.Next() {
+        var w models.WordInfo
+        if err := rows.Scan(
+            &w.Word.ID,
+            &w.Word.Word,
+            &w.Word.Language,
+            &w.Word.Difficulty,
+            &w.Word.Translation,
+            &w.Word.DefinitionEN,
+            &w.Word.DefinitionLocal,
+            &w.Count,
+        ); err != nil {
+            return nil, err
+        }
+        words = append(words, w)
+    }
+    return words, nil
 }
