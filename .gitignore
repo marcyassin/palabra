@@ -57,3 +57,4 @@ build/
 # Ignore Python virtual environment for processor
 processor/.venv/
 dataset_builder/.venv
+language_datasets/*.csv
