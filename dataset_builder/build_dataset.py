@@ -38,10 +38,10 @@ OUTPUT_GZ = OUTPUT_DIR / f"{BASE_FILENAME}.gz"
 print(f"🧠 Loading spaCy model for '{SOURCE_LANG}'...")
 if SOURCE_LANG.startswith("es"):
     try:
-        nlp = spacy.load("es_dep_news_trf")
+        nlp = spacy.load("es_core_news_lg")
     except OSError:
         print("⚠️ Transformer model not found. Run:")
-        print("python -m spacy download es_dep_news_trf")
+        print("python -m spacy download es_core_news_lg")
         nlp = spacy.load("es_core_news_lg")
 else:
     raise ValueError(f"No spaCy model configured for language '{SOURCE_LANG}'")
