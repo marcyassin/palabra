@@ -19,10 +19,11 @@ import pandas as pd
 from pathlib import Path
 from collections import defaultdict
 from wordfreq import top_n_list, word_frequency
+from sanitizers.spanish import clean_lemma
 import spacy
 
 # --- Configuration ---
-TOTAL_WORDS = int(os.getenv("TOTAL_WORDS", 100_000))
+TOTAL_WORDS = int(os.getenv("TOTAL_WORDS", 50_000))
 SOURCE_LANG = os.getenv("SOURCE_LANG", "es")
 TARGET_LANG = os.getenv("TARGET_LANG", "en")
 
@@ -47,38 +48,25 @@ else:
     raise ValueError(f"No spaCy model configured for language '{SOURCE_LANG}'")
 
 # --- Helper functions ---
-def assign_difficulty_by_rank(index: int, total_words: int) -> int:
-    """
-    Assign CEFR-like difficulty (1–6) based on frequency rank,
-    using flattened proportions for better coverage.
-    """
-    pct = index / total_words
-    if pct < 0.02:      # top 2%
-        return 1  # A1
-    elif pct < 0.06:    # next 4%
-        return 2  # A2
-    elif pct < 0.14:    # next 8%
-        return 3  # B1
-    elif pct < 0.30:    # next 16%
-        return 4  # B2
-    elif pct < 0.55:    # next 25%
-        return 5  # C1
-    else:
-        return 6  # C2
+def assign_difficulty_by_rank(index, total):
+    pct = index / total
+    if pct < 0.01: return 1  # A1
+    elif pct < 0.03: return 2  # A2
+    elif pct < 0.07: return 3  # B1
+    elif pct < 0.15: return 4  # B2
+    elif pct < 0.30: return 5  # C1
+    else: return 6  # C2
 
 
 def lemmatize_words(words):
-    """
-    Lemmatize and POS-tag the list of words using spaCy.
-    Returns a list of tuples: (original_word, lemma, pos)
-    """
     results = []
     batch_size = 1000
     for i in range(0, len(words), batch_size):
         doc = nlp(" ".join(words[i:i + batch_size]))
         for token in doc:
             if token.is_alpha:
-                results.append((token.text.lower(), token.lemma_.lower(), token.pos_))
+                cleaned = clean_lemma(token.text, token.lemma_)
+                results.append((token.text.lower(), cleaned, token.pos_))
     return results
 
 
@@ -116,13 +104,6 @@ def build_dataset():
     # Build DataFrame
     df = pd.DataFrame(aggregated, columns=["lemma", "pos", "forms", "freq"])
 
-    # Drop lemmas with only one form (optional cleanup)
-    df["form_count"] = df["forms"].apply(lambda f: len(f.split(",")))
-    before_count = len(df)
-    df = df[df["form_count"] > 1].drop(columns=["form_count"])
-    after_count = len(df)
-    print(f"🧹 Dropped {before_count - after_count:,} lemmas with only one form.")
-
     # Compute Zipf score from aggregated frequency
     df["zipf"] = df["freq"].apply(lambda f: 6 + math.log10(f) if f > 0 else 0)
 
@@ -152,7 +133,6 @@ def build_dataset():
             "example_source",
             "example_target",
             "difficulty",
-            "zipf",
         ]
     ]
 
