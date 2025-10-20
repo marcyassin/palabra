@@ -5,7 +5,7 @@ logger = get_logger(__name__)
 
 def main():
     logger.info("Processor started.")
-    process_book(1, "00bfe969-ec54-469b-a581-a4969c147886-cixin.epub")
+    process_book(1, "bb9c5faf-5dc1-41ca-84f1-4fa789797ff3-cixin.epub")
 
 if __name__ == "__main__":
     main()

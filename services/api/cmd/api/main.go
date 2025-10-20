@@ -36,7 +36,7 @@ func main() {
     }
 
     addr := getEnv("APP_ADDR", ":4000")
-    dsn := getEnv("DATABASE_URL", "")
+    dsn := getEnv("DATABASE_URL", "postgresql://palabra:secret@localhost:5432/palabra?sslmode=disable")
     if dsn == "" {
         errorLog.Fatal("DATABASE_URL must be set")
     }

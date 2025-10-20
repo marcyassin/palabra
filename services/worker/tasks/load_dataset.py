@@ -8,7 +8,7 @@ from pathlib import Path
 from sqlalchemy import create_engine, text
 from worker.config.settings import DB_URL
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", PROJECT_ROOT / "language_datasets"))
 SOURCE_LANG = os.getenv("SOURCE_LANG", "es")
 TARGET_LANG = os.getenv("TARGET_LANG", "en")
