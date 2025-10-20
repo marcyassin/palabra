@@ -1,8 +1,8 @@
-from processor.utils.logger import get_logger
-from processor.storage.minio_client import get_minio_client
-from processor.nlp.extractor import extract_words_from_file
-from processor.config.settings import MINIO_BUCKET, LANGUAGE_CODE
-from processor.db.connection import engine
+from worker.utils.logger import get_logger
+from worker.storage.minio_client import get_minio_client
+from worker.nlp.extractor import extract_words_from_file
+from worker.config.settings import MINIO_BUCKET, LANGUAGE_CODE
+from worker.db.connection import engine
 from sqlalchemy import text
 
 logger = get_logger(__name__)

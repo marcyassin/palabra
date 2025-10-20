@@ -1,0 +1,1 @@
+from worker.nlp.sanitizers.spanish import clean_lemma

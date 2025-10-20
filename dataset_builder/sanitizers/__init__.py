@@ -1,1 +1,0 @@
-from .spanish import clean_lemma

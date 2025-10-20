@@ -1,1 +1,0 @@
-from .extractor import extract_words_from_file

@@ -1,9 +1,9 @@
 # --- Go (api/)
-api/bin/
-api/build/
-api/dist/
-api/tmp/
-api/coverage/
+services/api/bin/
+services/api/build/
+services/api/dist/
+services/api/tmp/
+services/api/coverage/
 api/*.test
 api/*.out
 
@@ -55,6 +55,5 @@ dist/
 build/
 
 # Ignore Python virtual environment for processor
-processor/.venv/
-dataset_builder/.venv
+services/worker/.venv/
 language_datasets/*.csv

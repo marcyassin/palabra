@@ -1,0 +1,1 @@
+from worker.tasks.process_book import process_book

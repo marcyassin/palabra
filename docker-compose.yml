@@ -31,7 +31,7 @@ services:
       DATABASE_URL: postgres://palabra:secret@postgres:5432/palabra?sslmode=disable
       DBMATE_MIGRATIONS_DIR: /db/migrations
     volumes:
-      - ./api/db:/db
+      - ./services/api/db:/db
 
   tika:
     image: apache/tika:3.2.3.0-full

@@ -1,5 +1,5 @@
-from processor.tasks.process_book import process_book
-from processor.utils.logger import get_logger
+from worker.tasks.process_book import process_book
+from worker.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
