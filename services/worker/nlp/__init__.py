@@ -1,1 +1,1 @@
-from worker.nlp.extractor import extract_words_from_file
+from worker.nlp.extractor import extract_words_from_buffer

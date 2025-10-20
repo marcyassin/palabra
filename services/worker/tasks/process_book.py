@@ -1,6 +1,6 @@
 from worker.utils.logger import get_logger
 from worker.storage.minio_client import get_minio_client
-from worker.nlp.extractor import extract_words_from_file
+from worker.nlp.extractor import extract_words_from_buffer
 from worker.nlp.sanitizers.spanish import clean_lemma
 from worker.config.settings import MINIO_BUCKET, LANGUAGE_CODE
 from worker.db.connection import engine
@@ -33,7 +33,7 @@ def process_book(book_id, filename):
     response.release_conn()
 
     # --- Extract tokens ---
-    word_counts, language = extract_words_from_file(data)
+    word_counts, language = extract_words_from_buffer(data)
     logger.info(f"🔤 Extracted {len(word_counts)} unique tokens before lemmatization")
 
     if not word_counts:

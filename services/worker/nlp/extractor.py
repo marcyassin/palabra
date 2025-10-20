@@ -8,7 +8,7 @@ from wordfreq import tokenize
 
 language = "es"
 
-def extract_words_from_file(data: bytes) -> Union[Counter[Any], tuple[Counter[str], Any]]:
+def extract_words_from_buffer(data: bytes) -> Union[Counter[Any], tuple[Counter[str], Any]]:
     """
     Extracts and tokenizes words from any text-based file.
 
