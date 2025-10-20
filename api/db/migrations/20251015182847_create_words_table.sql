@@ -4,7 +4,7 @@ CREATE TABLE words (
     word TEXT NOT NULL,
     language TEXT NOT NULL,
     difficulty INT,
-    frequency INT DEFAULT 0,
+    zipf_score DOUBLE PRECISION DEFAULT 0,
     created TIMESTAMP NOT NULL DEFAULT NOW()
 );
 

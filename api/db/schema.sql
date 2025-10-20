@@ -1,11 +1,7 @@
-\restrict 9ApuyTf4DfGHD5nTCP4lfgbN15b9kB6UqXhuGEqzEyVg9Om7MDAAH3e15IDIDUT
-
--- Dumped from database version 16.10 (Debian 16.10-1.pgdg13+1)
--- Dumped by pg_dump version 16.10 (Homebrew)
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -83,7 +79,7 @@ CREATE TABLE public.words (
     word text NOT NULL,
     language text NOT NULL,
     difficulty integer,
-    frequency integer DEFAULT 0,
+    zipf_score double precision DEFAULT 0,
     created timestamp without time zone DEFAULT now() NOT NULL
 );
 
@@ -147,6 +143,14 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
+-- Name: words unique_word_language; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.words
+    ADD CONSTRAINT unique_word_language UNIQUE (word, language);
+
+
+--
 -- Name: words words_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -174,8 +178,6 @@ ALTER TABLE ONLY public.book_words
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 9ApuyTf4DfGHD5nTCP4lfgbN15b9kB6UqXhuGEqzEyVg9Om7MDAAH3e15IDIDUT
-
 
 --
 -- Dbmate schema migrations
@@ -184,4 +186,5 @@ ALTER TABLE ONLY public.book_words
 INSERT INTO public.schema_migrations (version) VALUES
     ('20251015181202'),
     ('20251015182847'),
-    ('20251015184415');
+    ('20251015184415'),
+    ('20251020041727');

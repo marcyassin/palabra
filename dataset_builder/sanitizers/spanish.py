@@ -30,6 +30,10 @@ def clean_lemma(word: str, lemma: str) -> str:
     word_lower = word.lower()
     lemma_lower = lemma.lower()
 
+    # Skip malformed or multiword lemmas like "vender el", "utilizar la"
+    if " " in lemma_lower or re.search(r"\b(el|la|los|las|un|una|unos|unas)$", lemma_lower):
+        return ""
+
     # Fix accidental accented infinitives (hablár → hablar)
     if lemma_lower.endswith("ár"):
         lemma_lower = lemma_lower.replace("á", "a")
