@@ -24,6 +24,12 @@ services:
     volumes:
       - miniodata:/data
 
+  redis:
+    image: redis:7
+    container_name: palabra_redis
+    ports:
+      - "6379:6379"
+
   dbmate:
     image: amacneil/dbmate:latest
     container_name: palabra_dbmate
@@ -32,6 +38,8 @@ services:
       DBMATE_MIGRATIONS_DIR: /db/migrations
     volumes:
       - ./services/api/db:/db
+    depends_on:
+      - postgres
 
   tika:
     image: apache/tika:3.2.3.0-full
@@ -39,6 +47,32 @@ services:
     ports:
       - "9998:9998"
     restart: always
+
+  rq-worker:
+    build: ./services/worker
+    command: ["worker"]
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - MINIO_BUCKET=palabra
+      - DB_URL=postgresql+psycopg2://palabra:secret@postgres:5432/palabra
+    depends_on:
+      - redis
+      - postgres
+      - minio
+
+  worker-api:
+    build: ./services/worker
+    command: ["api"]
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - MINIO_BUCKET=palabra
+      - DB_URL=postgresql+psycopg2://palabra:secret@postgres:5432/palabra
+    depends_on:
+      - redis
+      - postgres
+      - minio
+    ports:
+      - "8001:8000"
 
 volumes:
   pgdata:

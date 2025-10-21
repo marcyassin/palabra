@@ -1,23 +1,28 @@
-# Use official Python 3.11 image as base
-FROM python:3.11-slim
+# ---------- Base ----------
+FROM python:3.11-slim AS base
 
-# Set work directory
 WORKDIR /app
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
-# Copy requirements first for caching
+# ---------- System dependencies ----------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---------- Copy and install Python dependencies ----------
 COPY requirements.txt .
-
-# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
+# ---------- Copy project files ----------
 COPY . .
 
-# Expose a port if you plan to serve HTTP requests (optional)
-# EXPOSE 8000
+# ---------- Entrypoint ----------
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 
-# Set environment variables (optional, can also use .env)
-ENV PYTHONUNBUFFERED=1
-
-# Command to run the processor
-CMD ["python", "main.py"]
+CMD ["worker"]

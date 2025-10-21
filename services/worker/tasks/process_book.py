@@ -1,3 +1,4 @@
+from rq import get_current_job
 from worker.utils.logger import get_logger
 from worker.storage.minio_client import get_minio_client
 from worker.nlp.extractor import extract_words_from_buffer
@@ -23,6 +24,10 @@ def process_book(book_id, filename):
     Extract, lemmatize, and persist words from a book file.
     Uses nlp.pipe for efficient batch lemmatization.
     """
+    job = get_current_job()
+    if job:
+        logger.info(f"🚀 Starting RQ job {job.id} for book {book_id}")
+
     minio_client = get_minio_client()
     logger.info(f"📘 Processing book {book_id}: {filename}")
 
@@ -91,6 +96,11 @@ def process_book(book_id, filename):
                 for w, c in lemma_counter.items() if w in id_map
             ],
         )
+
+    if job:
+        job.meta["status"] = "completed"
+        job.save_meta()
+        logger.info(f"🏁 RQ job {job.id} completed successfully.")
 
     logger.info(f"✅ Book {book_id} processed successfully.")
     logger.info(f"🌐 Language detected: {language}")
