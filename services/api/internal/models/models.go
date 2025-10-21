@@ -3,19 +3,21 @@ package models
 import (
     "errors"
     "time"
+    "github.com/google/uuid"
 )
 
 var ErrNoRecord = errors.New("models: no matching record found")
 
 type Book struct {
-    ID        int        `json:"id"`
-    Title     string     `json:"title"`
-    Filename  string     `json:"filename"`
-    Language  string     `json:"language"`
-    UserID    *int       `json:"userId,omitempty"`
-    Status    string     `json:"status"`
-    Created   time.Time  `json:"created"`
-    Processed *time.Time `json:"processed,omitempty"`
+    ID               uuid.UUID  `json:"id"`
+    Title            string     `json:"title"`
+    Filename         string     `json:"filename"`
+    OriginalFilename string     `json:"original_filename"`
+    Language         string     `json:"language"`
+    UserID           int        `json:"userId"`
+    Status           string     `json:"status"`
+    Created          time.Time  `json:"created"`
+    Processed        *time.Time `json:"processed"`
 }
 
 type Word struct {

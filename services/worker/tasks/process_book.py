@@ -7,6 +7,7 @@ from worker.config.settings import MINIO_BUCKET, LANGUAGE_CODE
 from worker.db.connection import engine
 from sqlalchemy import text
 import spacy
+import uuid
 
 logger = get_logger(__name__)
 
@@ -27,6 +28,12 @@ def process_book(book_id, filename):
     job = get_current_job()
     if job:
         logger.info(f"🚀 Starting RQ job {job.id} for book {book_id}")
+
+    # Ensure book_id is a proper UUID object (important for SQL binding)
+    try:
+        book_id = uuid.UUID(str(book_id))
+    except ValueError:
+        logger.warning(f"⚠️ Invalid book_id format, using string as fallback: {book_id}")
 
     minio_client = get_minio_client()
     logger.info(f"📘 Processing book {book_id}: {filename}")

@@ -10,6 +10,20 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -19,7 +33,7 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.book_words (
-    book_id integer NOT NULL,
+    book_id uuid NOT NULL,
     word_id integer NOT NULL,
     count integer DEFAULT 1 NOT NULL
 );
@@ -30,35 +44,16 @@ CREATE TABLE public.book_words (
 --
 
 CREATE TABLE public.books (
-    id integer NOT NULL,
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
     title text NOT NULL,
     filename text NOT NULL,
+    original_filename text,
     language text NOT NULL,
     user_id integer,
     status text DEFAULT 'pending'::text NOT NULL,
     created timestamp without time zone DEFAULT now() NOT NULL,
     processed timestamp without time zone
 );
-
-
---
--- Name: books_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.books_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: books_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.books_id_seq OWNED BY public.books.id;
 
 
 --
@@ -102,13 +97,6 @@ CREATE SEQUENCE public.words_id_seq
 --
 
 ALTER SEQUENCE public.words_id_seq OWNED BY public.words.id;
-
-
---
--- Name: books id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.books ALTER COLUMN id SET DEFAULT nextval('public.books_id_seq'::regclass);
 
 
 --

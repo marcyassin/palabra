@@ -80,7 +80,13 @@ rollback:
 # ====== Data Management ======
 
 ## 🌱 Seed the database (build + load lemma dataset)
-seed:
+seed-generate-dataset:
 	$(DOCKER_COMPOSE) run --rm $(PYTHON_WORKER_SERVICE) python -m worker.tasks.build_dataset
+	@echo "✅ New language dataset generated"
+
+seed-load-dataset:
 	$(DOCKER_COMPOSE) run --rm $(PYTHON_WORKER_SERVICE) python -m worker.tasks.load_dataset
 	@echo "✅ Database seeded with language dataset"
+
+seed-complete: seed-generate-dataset seed-load-dataset
+	@echo "🌾 Database fully seeded and ready!"

@@ -1,10 +1,11 @@
--- db/migrations/20251015181202_create_books_table.sql
-
 -- migrate:up
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 CREATE TABLE books (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
     filename TEXT NOT NULL,
+    original_filename TEXT,
     language TEXT NOT NULL,
     user_id INT,
     status TEXT NOT NULL DEFAULT 'pending',

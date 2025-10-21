@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, func
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -18,6 +19,6 @@ class Word(Base):
 class BookWord(Base):
     __tablename__ = "book_words"
 
-    book_id = Column(Integer, primary_key=True)
+    book_id = Column(UUID(as_uuid=True), ForeignKey("books.id"), primary_key=True)
     word_id = Column(Integer, ForeignKey("words.id"), primary_key=True)
     count = Column(Integer, nullable=False)

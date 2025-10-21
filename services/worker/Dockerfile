@@ -2,7 +2,9 @@
 FROM python:3.11-slim AS base
 
 WORKDIR /app
-ENV PYTHONUNBUFFERED=1 \
+COPY . /app
+ENV PYTHONPATH=/app \
+    PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
 # ---------- System dependencies ----------

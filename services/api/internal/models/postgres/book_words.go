@@ -4,7 +4,7 @@ import (
     "database/sql"
     "fmt"
     "strings"
-
+    "github.com/google/uuid"
     "marcyassin/palabra/internal/models"
 )
 
@@ -46,7 +46,7 @@ func (m *BookWordsModel) GetByBook(bookID int) (map[int]int, error) {
 }
 
 func (m *BookWordsModel) GetBookWords(
-    bookID int,
+    bookID uuid.UUID,
     difficulty, minCount, maxCount, limit, offset int,
     sortOrder string,
 ) ([]models.WordInfo, error) {

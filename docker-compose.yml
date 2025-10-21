@@ -50,8 +50,10 @@ services:
 
   rq-worker:
     build: ./services/worker
+    working_dir: /app
     command: ["worker"]
     environment:
+      - PYTHONPATH=/app
       - REDIS_URL=redis://redis:6379/0
       - MINIO_BUCKET=palabra
       - DB_URL=postgresql+psycopg2://palabra:secret@postgres:5432/palabra
@@ -62,8 +64,10 @@ services:
 
   worker-api:
     build: ./services/worker
+    working_dir: /app
     command: ["api"]
     environment:
+      - PYTHONPATH=/app
       - REDIS_URL=redis://redis:6379/0
       - MINIO_BUCKET=palabra
       - DB_URL=postgresql+psycopg2://palabra:secret@postgres:5432/palabra
