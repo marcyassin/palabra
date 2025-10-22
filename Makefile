@@ -11,7 +11,7 @@ MIGRATIONS_DIR := ./services/api/db/migrations
 
 ## 🟢 Bring up the full environment
 up:
-	$(DOCKER_COMPOSE) up --build -d
+	$(DOCKER_COMPOSE) --profile builder up --build -d
 	@echo "✅ $(PROJECT_NAME) environment started"
 
 ## 🔴 Stop all containers
@@ -81,11 +81,17 @@ rollback:
 
 ## 🌱 Seed the database (build + load lemma dataset)
 seed-generate-dataset:
-	$(DOCKER_COMPOSE) run --rm $(PYTHON_WORKER_SERVICE) python -m worker.tasks.build_dataset
+	@echo "⚙️  Building language dataset locally..."
+	@source services/worker/.venv/bin/activate && \
+	cd services && \
+	python -m worker.tasks.build_dataset
 	@echo "✅ New language dataset generated"
 
 seed-load-dataset:
-	$(DOCKER_COMPOSE) run --rm $(PYTHON_WORKER_SERVICE) python -m worker.tasks.load_dataset
+	@echo "📤 Loading dataset into Postgres..."
+	@source services/worker/.venv/bin/activate && \
+	cd services && \
+	python -m worker.tasks.load_dataset
 	@echo "✅ Database seeded with language dataset"
 
 seed-complete: seed-generate-dataset seed-load-dataset

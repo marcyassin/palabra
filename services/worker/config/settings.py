@@ -3,13 +3,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DB_URL = os.getenv("DATABASE_URL", "postgresql://palabra:secret@localhost:5432/palabra")
+# --- Database ---
+DB_URL = os.getenv("DATABASE_URL")
+SEED_DB_URL = os.getenv("SEED_DATABASE_URL")
 
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
-MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
-MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
-MINIO_BUCKET = os.getenv("MINIO_BUCKET", "palabra")
-MINIO_USE_SSL = os.getenv("MINIO_SSL", "false").lower() == "true"
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+# --- MinIO ---
+MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT")
+MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY")
+MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY")
+MINIO_BUCKET = os.getenv("MINIO_BUCKET")
+MINIO_USE_SSL = os.getenv("MINIO_SSL").lower() == "true"
 
-LANGUAGE_CODE = "es"
+# --- Redis ---
+REDIS_URL = os.getenv("REDIS_URL")
+
+# --- Language ---
+LANGUAGE_CODE = os.getenv("LANGUAGE_CODE", "es")

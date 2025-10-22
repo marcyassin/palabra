@@ -3,6 +3,7 @@ FROM python:3.11-slim AS base
 
 WORKDIR /app
 COPY . /app
+
 ENV PYTHONPATH=/app \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
@@ -15,16 +16,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# ---------- Copy and install Python dependencies ----------
+# ---------- Python dependencies ----------
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-# ---------- Copy project files ----------
-COPY . .
 
 # ---------- Entrypoint ----------
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
-CMD ["worker"]

@@ -6,7 +6,7 @@ import os
 import pandas as pd
 from pathlib import Path
 from sqlalchemy import create_engine, text
-from worker.config.settings import DB_URL
+from worker.config.settings import SEED_DB_URL
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", PROJECT_ROOT / "language_datasets"))
@@ -21,7 +21,7 @@ def load_dataset():
     df = pd.read_csv(OUTPUT_GZ)
     print(f"✅ Loaded {len(df)} rows. Inserting into database using SQLAlchemy...")
 
-    engine = create_engine(DB_URL)
+    engine = create_engine(SEED_DB_URL)
 
     with engine.begin() as conn:
         for _, row in df.iterrows():

@@ -48,29 +48,50 @@ services:
       - "9998:9998"
     restart: always
 
-  rq-worker:
+  api:
+    build: ./services/api
+    command: ["go", "run", "./cmd/api"]
+    volumes:
+      - ./services/api:/app       # mount local Go code for live reload
+    env_file:
+      - .env                      # ✅ .env lives in palabra root
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+      - minio
+      - worker-api
+
+  worker-base:
     build: ./services/worker
+    image: palabra-worker
+    environment:
+      - PYTHONPATH=/app
+    command: [ "bash", "-c", "echo Base built" ]
+    profiles: [ "builder" ]
+
+
+  rq-worker:
+    image: palabra-worker
     working_dir: /app
     command: ["worker"]
     environment:
-      - PYTHONPATH=/app
-      - REDIS_URL=redis://redis:6379/0
-      - MINIO_BUCKET=palabra
-      - DB_URL=postgresql+psycopg2://palabra:secret@postgres:5432/palabra
+      PYTHONPATH: /app
+    env_file:
+      - .env                      # ✅ reuse the same .env
     depends_on:
       - redis
       - postgres
       - minio
 
   worker-api:
-    build: ./services/worker
+    image: palabra-worker
     working_dir: /app
     command: ["api"]
     environment:
-      - PYTHONPATH=/app
-      - REDIS_URL=redis://redis:6379/0
-      - MINIO_BUCKET=palabra
-      - DB_URL=postgresql+psycopg2://palabra:secret@postgres:5432/palabra
+      PYTHONPATH: /app/services/worker
+    env_file:
+      - .env
     depends_on:
       - redis
       - postgres
