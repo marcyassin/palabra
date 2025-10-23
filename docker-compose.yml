@@ -73,12 +73,11 @@ services:
 
   rq-worker:
     image: palabra-worker
-    working_dir: /app
     command: ["worker"]
-    environment:
-      PYTHONPATH: /app
+    volumes:
+      - ./services/worker:/app
     env_file:
-      - .env                      # ✅ reuse the same .env
+      - .env
     depends_on:
       - redis
       - postgres
@@ -86,10 +85,9 @@ services:
 
   worker-api:
     image: palabra-worker
-    working_dir: /app
-    command: ["api"]
-    environment:
-      PYTHONPATH: /app/services/worker
+    command: [ "api" ]
+    volumes:
+      - ./services/worker:/app
     env_file:
       - .env
     depends_on:

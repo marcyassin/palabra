@@ -57,3 +57,6 @@ build/
 # Ignore Python virtual environment for processor
 services/worker/.venv/
 language_datasets/*.csv
+# Python bytecode
+__pycache__/
+*.py[cod]

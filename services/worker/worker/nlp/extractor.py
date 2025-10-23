@@ -5,6 +5,7 @@ from typing import Union, Any, Optional
 from tika import parser
 from nltk.corpus import stopwords
 from wordfreq import tokenize
+from worker.config.settings import TIKA_SERVER_ENDPOINT
 
 language = "es"
 
@@ -15,7 +16,7 @@ def extract_words_from_buffer(data: bytes) -> Union[Counter[Any], tuple[Counter[
     Automatically detects the language using Tika's metadata,
     falling back to DEFAULT_LANGUAGE if detection fails.
     """
-    parsed = parser.from_buffer(BytesIO(data))
+    parsed = parser.from_buffer(BytesIO(data), serverEndpoint=TIKA_SERVER_ENDPOINT)
     text = parsed.get("content", "")
     if not text:
         return Counter()

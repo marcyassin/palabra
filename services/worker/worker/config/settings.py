@@ -17,5 +17,8 @@ MINIO_USE_SSL = os.getenv("MINIO_SSL").lower() == "true"
 # --- Redis ---
 REDIS_URL = os.getenv("REDIS_URL")
 
+# --- Apache Tika ---
+TIKA_SERVER_ENDPOINT = os.getenv("TIKA_SERVER_ENDPOINT")
+
 # --- Language ---
 LANGUAGE_CODE = os.getenv("LANGUAGE_CODE", "es")

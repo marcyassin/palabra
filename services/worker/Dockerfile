@@ -1,27 +1,20 @@
-# ---------- Base ----------
 FROM python:3.11-slim AS base
 
 WORKDIR /app
 COPY . /app
 
-ENV PYTHONPATH=/app \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
-
-# ---------- System dependencies ----------
+# System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    libpq-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+    gcc g++ libpq-dev curl && rm -rf /var/lib/apt/lists/*
 
-# ---------- Python dependencies ----------
+# Install requirements
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# ---------- Entrypoint ----------
+# Install the worker package in editable mode (for live reload)
+RUN pip install -e .
+
+# Entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
-
